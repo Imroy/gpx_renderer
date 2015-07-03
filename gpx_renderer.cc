@@ -4,7 +4,7 @@
 #include <stack>
 #include <algorithm>
 #include <cmath>
-#include "agg2/agg_rendering_buffer.h"
+#include <agg_rendering_buffer.h>
 #include "GPX.hh"
 
 // Size of each pixel in metres
