@@ -49,6 +49,9 @@ namespace GPX {
   class Parser : public xmlpp::SaxParser {
   private:
     std::list<trk::ptr> _tracks;
+    unsigned int _point_count;
+    double _tot_lat, _min_lat, _max_lat;
+    double _tot_lon, _min_lon, _max_lon;
 
   public:
     Parser();
@@ -56,6 +59,16 @@ namespace GPX {
 
     void new_track(void) { _tracks.push_back(std::make_shared<trk>()); }
     trk::ptr last_track(void) { return _tracks.back(); }
+
+    unsigned int point_count(void) const { return _point_count; }
+
+    double min_lat(void) const { return _min_lat; }
+    double max_lat(void) const { return _max_lat; }
+    double avg_lat(void) const { return _point_count > 0 ? _tot_lat / _point_count : 0; }
+
+    double min_lon(void) const { return _min_lon; }
+    double max_lon(void) const { return _max_lon; }
+    double avg_lon(void) const { return _point_count > 0 ? _tot_lon / _point_count : 0; }
 
   protected:
     virtual void on_start_document();

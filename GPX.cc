@@ -3,7 +3,8 @@
 
 namespace GPX {
   Parser::Parser() :
-    xmlpp::SaxParser()
+    xmlpp::SaxParser(),
+    _point_count(0)
   {}
 
   Parser::~Parser() {
@@ -33,6 +34,23 @@ namespace GPX {
 	if (prop.name == "lon")
 	  lon = boost::lexical_cast<double>(prop.value);
       }
+      if (_point_count == 0) {
+	_tot_lat = _min_lat = _max_lat = lat;
+	_tot_lon = _min_lon = _max_lon = lon;
+      } else {
+	_tot_lat += lat;
+	_tot_lon += lon;
+
+	if (lat < _min_lat)
+	  _min_lat = lat;
+	else if (lat > _max_lat)
+	  _max_lat = lat;
+	if (lon < _min_lon)
+	  _min_lon = lon;
+	else if (lon > _max_lon)
+	  _max_lon = lon;
+      }
+      _point_count++;
       last_track()->last_segment()->new_point(lat, lon);
     }
   }

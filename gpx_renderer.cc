@@ -29,6 +29,10 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  std::cerr << "Points:\t" << parser.point_count() << std::endl;
+  std::cerr << "Lattitude:\t" << parser.min_lat() << " .. " << parser.max_lat() << ", avg: " << parser.avg_lat() << std::endl;
+  std::cerr << "Longitude:\t" << parser.min_lon() << " .. " << parser.max_lon() << ", avg: " << parser.avg_lon() << std::endl;
+
   /*
   unsigned int frame_width, frame_height;
   frame_width = boost::lexical_cast<unsigned int>(argv[1]);
