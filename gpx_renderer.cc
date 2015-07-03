@@ -13,11 +13,23 @@ bool write_ppm(const uint8_t* buf, unsigned width, unsigned height) {
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 3) {
-    std::cerr << argv[0] << " <width> <height>" << std::endl;
+  if (argc < 2) {
+    std::cerr << argv[0] << " <GPX file> [<GPX file>...]" << std::endl;
     exit(1);
   }
 
+  GPX::Parser parser;
+  for (int i = 1; i < argc; i++) {
+    try {
+      std::cerr << "Parsing file \"" << argv[i] << "\"..." << std::endl;
+      parser.parse_file(argv[i]);
+    }
+    catch(const xmlpp::exception& ex) {
+      std::cerr << "libxml++ exception: " << ex.what() << std::endl;
+    }
+  }
+
+  /*
   unsigned int frame_width, frame_height;
   frame_width = boost::lexical_cast<unsigned int>(argv[1]);
   frame_height = boost::lexical_cast<unsigned int>(argv[2]);
@@ -30,5 +42,6 @@ int main(int argc, char* argv[]) {
   write_ppm(buffer, frame_width, frame_height);
 
   delete [] buffer;
+  */
   return 0;
 }
