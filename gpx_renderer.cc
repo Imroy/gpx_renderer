@@ -2,9 +2,13 @@
 #include <string>
 #include <list>
 #include <stack>
-#include <boost/lexical_cast.hpp>
+#include <algorithm>
+#include <cmath>
 #include "agg2/agg_rendering_buffer.h"
 #include "GPX.hh"
+
+// Size of each pixel in metres
+#define RESOLUTION 100
 
 bool write_ppm(const uint8_t* buf, unsigned width, unsigned height) {
   std::cout << "P6 " << width << " " << height << " 255 " << std::endl;
@@ -33,10 +37,18 @@ int main(int argc, char* argv[]) {
   std::cerr << "Lattitude:\t" << parser.min_lat() << " .. " << parser.max_lat() << ", avg: " << parser.avg_lat() << std::endl;
   std::cerr << "Longitude:\t" << parser.min_lon() << " .. " << parser.max_lon() << ", avg: " << parser.avg_lon() << std::endl;
 
-  /*
-  unsigned int frame_width, frame_height;
-  frame_width = boost::lexical_cast<unsigned int>(argv[1]);
-  frame_height = boost::lexical_cast<unsigned int>(argv[2]);
+  double min_lat = std::min(std::abs(parser.min_lat()), std::abs(parser.max_lat()));
+  std::cerr << "Min lat = " << min_lat << std::endl;
+
+  double max_radius = 6371000 * std::cos(min_lat * M_PI / 180.0);
+  std::cerr << "Max radius = " << max_radius << " m" << std::endl;
+
+  double res = 2 * M_PI * max_radius / (360.0 * RESOLUTION);
+  std::cerr << "Resolution = " << res << " pixels/degree" << std::endl;
+
+  unsigned int frame_width = std::ceil((parser.max_lon() - parser.min_lon()) * res);
+  unsigned int frame_height = std::ceil((parser.max_lat() - parser.min_lat()) * res);
+  std::cerr << "Image will be " << frame_width << " x " << frame_height << std::endl;
 
   uint8_t *buffer = new uint8_t[frame_width * frame_height * 3];
   memset(buffer, 0, frame_width * frame_height * 3);
@@ -46,6 +58,6 @@ int main(int argc, char* argv[]) {
   write_ppm(buffer, frame_width, frame_height);
 
   delete [] buffer;
-  */
+
   return 0;
 }
