@@ -2,15 +2,6 @@
 #include "GPX.hh"
 
 namespace GPX {
-  trkpt::trkpt(const xmlpp::SaxParser::AttributeList& properties) {
-    for (auto prop : properties) {
-      if (prop.name == "lat")
-	_lat = boost::lexical_cast<double>(prop.value);
-      if (prop.name == "lon")
-	_lon = boost::lexical_cast<double>(prop.value);
-    }
-  }
-
   Parser::Parser() :
     xmlpp::SaxParser()
   {}
@@ -26,16 +17,23 @@ namespace GPX {
 
   void Parser::on_start_element(const Glib::ustring& name, const AttributeList& properties) {
     if (name == "trk") {
-      _tracks.push_back(GPX::trk(properties));
+      new_track(GPX::trk());
       return;
     }
 
     if (name == "trkseg") {
-      _tracks.back().new_segment(GPX::trkseg(properties));
+      last_track().new_segment(GPX::trkseg());
     }
 
     if (name == "trkpt") {
-      _tracks.back().last_segment().new_point(GPX::trkpt(properties));
+      double lat, lon;
+      for (auto prop : properties) {
+	if (prop.name == "lat")
+	  lat = boost::lexical_cast<double>(prop.value);
+	if (prop.name == "lon")
+	  lon = boost::lexical_cast<double>(prop.value);
+      }
+      last_track().last_segment().new_point(GPX::trkpt(lat, lon));
     }
   }
 
