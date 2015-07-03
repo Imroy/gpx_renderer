@@ -17,23 +17,23 @@ namespace GPX {
 
   void Parser::on_start_element(const Glib::ustring& name, const AttributeList& properties) {
     if (name == "trk") {
-      new_track(GPX::trk());
+      new_track();
       return;
     }
 
     if (name == "trkseg") {
-      last_track().new_segment(GPX::trkseg());
+      last_track()->new_segment();
     }
 
     if (name == "trkpt") {
-      double lat, lon;
+      double lat = 0, lon = 0;
       for (auto prop : properties) {
 	if (prop.name == "lat")
 	  lat = boost::lexical_cast<double>(prop.value);
 	if (prop.name == "lon")
 	  lon = boost::lexical_cast<double>(prop.value);
       }
-      last_track().last_segment().new_point(GPX::trkpt(lat, lon));
+      last_track()->last_segment()->new_point(lat, lon);
     }
   }
 
