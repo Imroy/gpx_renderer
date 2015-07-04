@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
 
       if (segment->num_points() == 1) {
 	GPX::trkpt::ptr point = segment->first_point();
-	draw_point(ras, map(point->lon(), point->lat()), 1.0);
+	draw_point(ras, map(point->lon(), point->lat()), 2.0);
       } else {
 	std::list<Map::coords> outline;
 	bool first = true, second = true;
@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
 	  if (first)
 	    first = false;
 	  else {
-	    calc_line(last_point, p, 1.0, a, b, c, d);
+	    calc_line(last_point, p, 2.0, a, b, c, d);
 	    if (second)
 	      second = false;
 	    else {
