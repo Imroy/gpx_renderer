@@ -2,3 +2,6 @@
 *#
 *.o
 gpx_renderer
+.depend
+.depend.bak
+*.png
