@@ -37,10 +37,10 @@ int main(int argc, char* argv[]) {
   std::cerr << "Lattitude:\t" << parser.min_lat() << " .. " << parser.max_lat() << ", avg: " << parser.avg_lat() << std::endl;
   std::cerr << "Longitude:\t" << parser.min_lon() << " .. " << parser.max_lon() << ", avg: " << parser.avg_lon() << std::endl;
 
-  double min_lat = std::min(std::abs(parser.min_lat()), std::abs(parser.max_lat()));
-  std::cerr << "Min lat = " << min_lat << std::endl;
+  double biggest_lat = std::min(std::abs(parser.min_lat()), std::abs(parser.max_lat()));
+  std::cerr << "Biggest lat = " << biggest_lat << std::endl;
 
-  double max_radius = 6371000 * std::cos(min_lat * M_PI / 180.0);
+  double max_radius = 6371000 * std::cos(biggest_lat * M_PI / 180.0);
   std::cerr << "Max radius = " << max_radius << " m" << std::endl;
 
   double res = 2 * M_PI * max_radius / (360.0 * RESOLUTION);
