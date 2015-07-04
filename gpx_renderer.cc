@@ -4,7 +4,15 @@
 #include <stack>
 #include <algorithm>
 #include <cmath>
+#include <agg_basics.h>
+#include <agg_renderer_scanline.h>
 #include <agg_rendering_buffer.h>
+#include <agg_pixfmt_rgb.h>
+#include <agg_rasterizer_scanline_aa.h>
+#include <agg_renderer_primitives.h>
+#include <agg_scanline_u.h>
+#include <agg_path_storage.h>
+#include <agg_conv_stroke.h>
 #include "GPX.hh"
 #include "Map.hh"
 
@@ -15,6 +23,13 @@ bool write_ppm(const uint8_t* buf, unsigned width, unsigned height) {
   std::cout << "P6 " << width << " " << height << " 255" << std::endl;
   std::cout.write(reinterpret_cast<const char*>(buf), width * height * 3);
   return true;
+}
+
+void draw_point(agg::rasterizer_scanline_aa<>& ras, Map::coords p, double size) {
+  ras.move_to_d(p.first - size,  p.second + size);
+  ras.line_to_d(p.first - size,  p.second + size);
+  ras.line_to_d(p.first + size,  p.second - size);
+  ras.line_to_d(p.first + size,  p.second - size);
 }
 
 int main(int argc, char* argv[]) {
@@ -57,6 +72,32 @@ int main(int argc, char* argv[]) {
   uint8_t *buffer = new uint8_t[image_width * image_height * 3];
 
   agg::rendering_buffer rbuf(buffer, image_width, image_height, image_width * 3);
+  agg::pixfmt_rgb24 pixf(rbuf);
+  agg::renderer_base<agg::pixfmt_rgb24> ren(pixf);
+  ren.clear(agg::rgba8(0,0,0));
+
+  agg::scanline_u8 sl;
+  agg::rasterizer_scanline_aa<> ras;
+  ras.gamma(agg::gamma_power(2.2));
+
+  for (auto track_i = parser.tracks_cbegin(); track_i != parser.tracks_cend(); track_i++) {
+    GPX::trk::ptr track = *track_i;
+
+    for (auto segment_i = track->segments_cbegin(); segment_i != track->segments_cend(); segment_i++) {
+      GPX::trkseg::ptr segment = *segment_i;
+
+      agg::path_storage ps;
+      agg::conv_stroke<agg::path_storage> pg(ps);
+      pg.width(1.0);
+
+      if (segment->num_points() == 1) {
+	GPX::trkpt::ptr point = segment->first_point();
+	draw_point(ras, map(point->lon(), point->lat()), 1.0);
+      }
+      ras.add_path(pg);
+      agg::render_scanlines_aa_solid(ras, sl, ren, agg::rgba8(255, 255, 255, 255));
+    }
+  }
 
   write_ppm(buffer, image_width, image_height);
 
