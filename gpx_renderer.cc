@@ -101,6 +101,7 @@ bool write_png(const uint8_t* buf, unsigned width, unsigned height) {
 }
 
 void draw_point(agg::rasterizer_scanline_aa<>& ras, Map::coords p, double size) {
+  size *= 0.5;
   ras.move_to_d(p.first - size,  p.second + size);
   ras.line_to_d(p.first - size,  p.second + size);
   ras.line_to_d(p.first + size,  p.second - size);
@@ -112,6 +113,7 @@ void calc_line(Map::coords p1, Map::coords p2, double width, Map::coords& a, Map
   double dy = p2.second - p1.second;
   double len = sqrt(dx*dx + dy*dy);
 
+  width *= 0.5;
   if (len > 1e-6) {
     double len_r = 1.0 / len;
     dx = width * (p2.second - p1.second) * len_r;
