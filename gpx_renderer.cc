@@ -13,15 +13,72 @@
 #include <agg_scanline_u.h>
 #include <agg_path_storage.h>
 #include <agg_conv_stroke.h>
+#include <png.h>
+#include <zlib.h>
+#include <time.h>
 #include "GPX.hh"
 #include "Map.hh"
 
 // Size of each pixel in metres
 #define RESOLUTION 100
 
-bool write_ppm(const uint8_t* buf, unsigned width, unsigned height) {
-  std::cout << "P6 " << width << " " << height << " 255" << std::endl;
-  std::cout.write(reinterpret_cast<const char*>(buf), width * height * 3);
+//! libPNG callback for writing to an ostream
+void png_write_ostream_cb(png_structp png, png_bytep buffer, png_size_t length) {
+  std::ostream *os = (std::ostream*)png_get_io_ptr(png);
+  os->write((char*)buffer, length);
+}
+
+//! libPNG callback for flushing an ostream
+void png_flush_ostream_cb(png_structp png) {
+  std::ostream *os = (std::ostream*)png_get_io_ptr(png);
+  os->flush();
+}
+
+bool write_png(const uint8_t* buf, unsigned width, unsigned height) {
+  png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+					     NULL, NULL, NULL);
+
+  if (!png)
+    return false;
+
+  png_infop info = png_create_info_struct(png);
+  if (!info) {
+    png_destroy_write_struct(&png, (png_infopp)NULL);
+    return false;
+  }
+
+  if (setjmp(png_jmpbuf(png))) {
+    png_destroy_write_struct(&png, &info);
+    return false;
+  }
+
+  png_set_write_fn(png, &std::cout, png_write_ostream_cb, png_flush_ostream_cb);
+
+  png_set_IHDR(png, info,
+	       width, height, 8, PNG_COLOR_TYPE_RGB,
+	       PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+  png_set_filter(png, 0, PNG_ALL_FILTERS);
+  png_set_compression_level(png, Z_BEST_COMPRESSION);
+
+  png_set_sRGB_gAMA_and_cHRM(png, info, 0);
+
+  {
+    time_t t = time(NULL);
+    if (t > 0) {
+      png_time ptime;
+      png_convert_from_time_t(&ptime, t);
+      png_set_tIME(png, info, &ptime);
+    }
+  }
+
+  png_write_info(png, info);
+
+  for (unsigned int y = 0; y < height; y++)
+    png_write_row(png, const_cast<png_bytep>(&buf[y * width * 3]));
+
+  png_write_end(png, info);
+
+  png_destroy_write_struct(&png, &info);
   return true;
 }
 
@@ -158,7 +215,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  write_ppm(buffer, image_width, image_height);
+  write_png(buffer, image_width, image_height);
 
   delete [] buffer;
 

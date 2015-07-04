@@ -2,7 +2,7 @@ PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 
 # Libraries with pkg-config data
-PKGS = libxml++-2.6 libagg
+PKGS = libxml++-2.6 libagg libpng12
 
 COMMON_FLAGS = -Wall -Iinclude -fopenmp -finput-charset=UTF-8 -Wformat -Wformat-security -Werror=format-security -D_FORTIFY_SOURCE=2 -fstack-protector --param ssp-buffer-size=4 -fPIE -pie
 LIBS = -lm -lstdc++ -lgomp -lboost_filesystem
