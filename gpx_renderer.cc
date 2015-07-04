@@ -32,6 +32,25 @@ void draw_point(agg::rasterizer_scanline_aa<>& ras, Map::coords p, double size) 
   ras.line_to_d(p.first + size,  p.second - size);
 }
 
+void calc_line(Map::coords p1, Map::coords p2, double width, Map::coords& a, Map::coords& b, Map::coords& c, Map::coords& d) {
+  double dx = p2.first - p1.first;
+  double dy = p2.second - p1.second;
+  double len = sqrt(dx*dx + dy*dy);
+
+  if (len > 1e-6) {
+    double len_r = 1.0 / len;
+    dx = width * (p2.second - p1.second) * len_r;
+    dy = width * (p2.first - p1.first) * len_r;
+  } else {
+    dx = dy = width;
+  }
+
+  a = std::make_pair<double, double>(p1.first - dx,  p1.second + dy);
+  b = std::make_pair<double, double>(p2.first - dx,  p2.second + dy);
+  c = std::make_pair<double, double>(p2.first + dx,  p2.second - dy);
+  d = std::make_pair<double, double>(p1.first + dx,  p1.second - dy);
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     std::cerr << argv[0] << " <GPX file> [<GPX file>...]" << std::endl;
@@ -85,6 +104,8 @@ int main(int argc, char* argv[]) {
 
     for (auto segment_i = track->segments_cbegin(); segment_i != track->segments_cend(); segment_i++) {
       GPX::trkseg::ptr segment = *segment_i;
+      if (segment->num_points() == 0)
+	continue;
 
       agg::path_storage ps;
       agg::conv_stroke<agg::path_storage> pg(ps);
@@ -93,6 +114,44 @@ int main(int argc, char* argv[]) {
       if (segment->num_points() == 1) {
 	GPX::trkpt::ptr point = segment->first_point();
 	draw_point(ras, map(point->lon(), point->lat()), 1.0);
+      } else {
+	std::list<Map::coords> outline;
+	bool first = true, second = true;
+	Map::coords last_point, last_b, last_c;
+	for (auto point_i = segment->points_cbegin(); point_i != segment->points_cend(); point_i++) {
+	  GPX::trkpt::ptr point = *point_i;
+	  Map::coords p = map(point->lon(), point->lat());
+	  Map::coords a, b, c, d;
+	  if (first)
+	    first = false;
+	  else {
+	    calc_line(last_point, p, 1.0, a, b, c, d);
+	    if (second)
+	      second = false;
+	    else {
+	      a.first = (a.first + last_b.first) * 0.5;
+	      a.second = (a.second + last_b.second) * 0.5;
+	      d.first = (d.first + last_c.first) * 0.5;
+	      d.second = (d.second + last_c.second) * 0.5;
+	    }
+	    outline.push_back(a);
+	    outline.push_back(b);
+	    outline.push_front(d);
+	    outline.push_front(c);
+	    last_b = b;
+	    last_c = c;
+	  }
+	  last_point = p;
+	}
+
+	first = true;
+	for (auto p : outline) {
+	  if (first) {
+	    ras.move_to_d(p.first, p.second);
+	    first = false;
+	  } else
+	    ras.line_to_d(p.first, p.second);
+	}
       }
       ras.add_path(pg);
       agg::render_scanlines_aa_solid(ras, sl, ren, agg::rgba8(255, 255, 255, 255));
