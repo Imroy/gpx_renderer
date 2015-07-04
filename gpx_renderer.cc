@@ -122,10 +122,10 @@ void calc_line(Map::coords p1, Map::coords p2, double width, Map::coords& a, Map
     dx = dy = width;
   }
 
-  a = std::make_pair<double, double>(p1.first - dx,  p1.second + dy);
-  b = std::make_pair<double, double>(p2.first - dx,  p2.second + dy);
-  c = std::make_pair<double, double>(p2.first + dx,  p2.second - dy);
-  d = std::make_pair<double, double>(p1.first + dx,  p1.second - dy);
+  a = Map::coords(p1.first - dx,  p1.second + dy);
+  b = Map::coords(p2.first - dx,  p2.second + dy);
+  c = Map::coords(p2.first + dx,  p2.second - dy);
+  d = Map::coords(p1.first + dx,  p1.second - dy);
 }
 
 int main(int argc, char* argv[]) {
