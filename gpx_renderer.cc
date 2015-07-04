@@ -38,7 +38,7 @@
 #include "Map.hh"
 
 // Size of each pixel in metres
-#define RESOLUTION 100
+#define RESOLUTION 250
 
 //! libPNG callback for writing to an ostream
 void png_write_ostream_cb(png_structp png, png_bytep buffer, png_size_t length) {
