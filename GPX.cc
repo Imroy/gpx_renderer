@@ -4,6 +4,7 @@
 namespace GPX {
   Parser::Parser() :
     xmlpp::SaxParser(),
+    _lat(0.0), _lon(0.0), _hdop(0.0),
     _point_count(0)
   {}
 
@@ -17,6 +18,8 @@ namespace GPX {
   }
 
   void Parser::on_start_element(const Glib::ustring& name, const AttributeList& properties) {
+    _context.push(name);
+
     if (name == "trk") {
       new_track();
       return;
@@ -27,38 +30,47 @@ namespace GPX {
     }
 
     if (name == "trkpt") {
-      double lat = 0, lon = 0;
       for (auto prop : properties) {
 	if (prop.name == "lat")
-	  lat = boost::lexical_cast<double>(prop.value);
+	  _lat = boost::lexical_cast<double>(prop.value);
 	if (prop.name == "lon")
-	  lon = boost::lexical_cast<double>(prop.value);
+	  _lon = boost::lexical_cast<double>(prop.value);
       }
-      if (_point_count == 0) {
-	_tot_lat = _min_lat = _max_lat = lat;
-	_tot_lon = _min_lon = _max_lon = lon;
-      } else {
-	_tot_lat += lat;
-	_tot_lon += lon;
-
-	if (lat < _min_lat)
-	  _min_lat = lat;
-	else if (lat > _max_lat)
-	  _max_lat = lat;
-	if (lon < _min_lon)
-	  _min_lon = lon;
-	else if (lon > _max_lon)
-	  _max_lon = lon;
-      }
-      _point_count++;
-      last_track()->last_segment()->new_point(lat, lon);
     }
   }
 
   void Parser::on_end_element(const Glib::ustring& name) {
+    if (name == "trkpt") {
+      last_track()->last_segment()->new_point(_lat, _lon);
+
+      if (_point_count == 0) {
+	_tot_lat = _min_lat = _max_lat = _lat;
+	_tot_lon = _min_lon = _max_lon = _lon;
+      } else {
+	_tot_lat += _lat;
+	_tot_lon += _lon;
+
+	if (_lat < _min_lat)
+	  _min_lat = _lat;
+	else if (_lat > _max_lat)
+	  _max_lat = _lat;
+	if (_lon < _min_lon)
+	  _min_lon = _lon;
+	else if (_lon > _max_lon)
+	  _max_lon = _lon;
+      }
+
+      _point_count++;
+
+      _lat = _lon = _hdop = 0;
+    }
+
+    _context.pop();
   }
 
   void Parser::on_characters(const Glib::ustring& characters) {
+    if (_context.top() == "hdop")
+      _hdop = boost::lexical_cast<double>(characters);
   }
 
   void Parser::on_comment(const Glib::ustring& text) {

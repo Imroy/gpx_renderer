@@ -1,5 +1,7 @@
 #pragma once
 #include <memory>
+#include <stack>
+#include <string>
 #include <libxml++/libxml++.h>
 
 namespace GPX {
@@ -58,7 +60,9 @@ namespace GPX {
 
   class Parser : public xmlpp::SaxParser {
   private:
+    std::stack<std::string> _context;
     std::list<trk::ptr> _tracks;
+    double _lat, _lon, _hdop;
     unsigned int _point_count;
     double _tot_lat, _min_lat, _max_lat;
     double _tot_lon, _min_lon, _max_lon;
