@@ -59,26 +59,31 @@ namespace GPX {
 
   void Parser::on_end_element(const Glib::ustring& name) {
     if (name == "trkpt") {
-      last_track()->last_segment()->new_point(_lat, _lon);
-
-      if (_point_count == 0) {
-	_tot_lat = _min_lat = _max_lat = _lat;
-	_tot_lon = _min_lon = _max_lon = _lon;
+      if (_hdop > 10.0) {
+	if (last_track()->last_segment()->num_points() > 0)
+	  last_track()->new_segment();
       } else {
-	_tot_lat += _lat;
-	_tot_lon += _lon;
+	last_track()->last_segment()->new_point(_lat, _lon);
 
-	if (_lat < _min_lat)
-	  _min_lat = _lat;
-	else if (_lat > _max_lat)
-	  _max_lat = _lat;
-	if (_lon < _min_lon)
-	  _min_lon = _lon;
-	else if (_lon > _max_lon)
+	if (_point_count == 0) {
+	  _tot_lat = _min_lat = _max_lat = _lat;
+	  _tot_lon = _min_lon = _max_lon = _lon;
+	} else {
+	  _tot_lat += _lat;
+	  _tot_lon += _lon;
+
+	  if (_lat < _min_lat)
+	    _min_lat = _lat;
+	  else if (_lat > _max_lat)
+	    _max_lat = _lat;
+	  if (_lon < _min_lon)
+	    _min_lon = _lon;
+	  else if (_lon > _max_lon)
 	  _max_lon = _lon;
-      }
+	}
 
-      _point_count++;
+	_point_count++;
+      }
 
       _lat = _lon = _hdop = 0;
     }
