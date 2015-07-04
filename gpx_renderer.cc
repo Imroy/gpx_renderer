@@ -11,7 +11,7 @@
 #define RESOLUTION 100
 
 bool write_ppm(const uint8_t* buf, unsigned width, unsigned height) {
-  std::cout << "P6 " << width << " " << height << " 255 " << std::endl;
+  std::cout << "P6 " << width << " " << height << " 255" << std::endl;
   std::cout.write(reinterpret_cast<const char*>(buf), width * height * 3);
   return true;
 }
