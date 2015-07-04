@@ -6,6 +6,7 @@
 #include <cmath>
 #include <agg_rendering_buffer.h>
 #include "GPX.hh"
+#include "Map.hh"
 
 // Size of each pixel in metres
 #define RESOLUTION 100
@@ -46,16 +47,18 @@ int main(int argc, char* argv[]) {
   double res = 2 * M_PI * max_radius / (360.0 * RESOLUTION);
   std::cerr << "Resolution = " << res << " pixels/degree" << std::endl;
 
-  unsigned int frame_width = std::ceil((parser.max_lon() - parser.min_lon()) * res);
-  unsigned int frame_height = std::ceil((parser.max_lat() - parser.min_lat()) * res);
-  std::cerr << "Image will be " << frame_width << " x " << frame_height << std::endl;
+  Map map(parser.min_lon(), parser.max_lat(), res);
+  Map::coords image_size = map(parser.max_lon(), parser.min_lat());
 
-  uint8_t *buffer = new uint8_t[frame_width * frame_height * 3];
-  memset(buffer, 0, frame_width * frame_height * 3);
+  unsigned int image_width = std::ceil(image_size.first);
+  unsigned int image_height = std::ceil(image_size.second);
+  std::cerr << "Image will be " << image_width << " x " << image_height << std::endl;
 
-  agg::rendering_buffer rbuf(buffer, frame_width, frame_height, frame_width * 3);
+  uint8_t *buffer = new uint8_t[image_width * image_height * 3];
 
-  write_ppm(buffer, frame_width, frame_height);
+  agg::rendering_buffer rbuf(buffer, image_width, image_height, image_width * 3);
+
+  write_ppm(buffer, image_width, image_height);
 
   delete [] buffer;
 
