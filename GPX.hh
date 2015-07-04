@@ -28,7 +28,12 @@ namespace GPX {
     trkseg(void) {}
 
     void new_point(double lat, double lon) { _points.push_back(std::make_shared<trkpt>(lat, lon)); }
+    trkpt::ptr first_point(void) { return _points.front(); }
     trkpt::ptr last_point(void) { return _points.back(); }
+
+    size_t num_points(void) const { return _points.size(); }
+    std::list<trkpt::ptr>::const_iterator points_cbegin() const { return _points.cbegin(); }
+    std::list<trkpt::ptr>::const_iterator points_cend() const { return _points.cend(); }
 
     typedef std::shared_ptr<trkseg> ptr;
   };
@@ -41,7 +46,12 @@ namespace GPX {
     trk(void) {}
 
     void new_segment(void) { _segments.push_back(std::make_shared<trkseg>()); }
+    trkseg::ptr first_segment(void) { return _segments.front(); }
     trkseg::ptr last_segment(void) { return _segments.back(); }
+
+    size_t num_segments(void) const { return _segments.size(); }
+    std::list<trkseg::ptr>::const_iterator segments_cbegin() const { return _segments.cbegin(); }
+    std::list<trkseg::ptr>::const_iterator segments_cend() const { return _segments.cend(); }
 
     typedef std::shared_ptr<trk> ptr;
   };
@@ -58,7 +68,12 @@ namespace GPX {
     virtual ~Parser();
 
     void new_track(void) { _tracks.push_back(std::make_shared<trk>()); }
+    trk::ptr first_track(void) { return _tracks.front(); }
     trk::ptr last_track(void) { return _tracks.back(); }
+
+    size_t num_tracks(void) const { return _tracks.size(); }
+    std::list<trk::ptr>::const_iterator tracks_cbegin() const { return _tracks.cbegin(); }
+    std::list<trk::ptr>::const_iterator tracks_cend() const { return _tracks.cend(); }
 
     unsigned int point_count(void) const { return _point_count; }
 
