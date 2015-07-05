@@ -22,7 +22,7 @@
 namespace GPX {
   Parser::Parser() :
     xmlpp::SaxParser(),
-    _lat(0.0), _lon(0.0), _hdop(0.0),
+    _coords(0.0, 0.0), _hdop(0.0),
     _point_count(0)
   {}
 
@@ -50,9 +50,9 @@ namespace GPX {
     if (name == "trkpt") {
       for (auto prop : properties) {
 	if (prop.name == "lat")
-	  _lat = boost::lexical_cast<double>(prop.value);
+	  _coords.second = boost::lexical_cast<double>(prop.value);
 	if (prop.name == "lon")
-	  _lon = boost::lexical_cast<double>(prop.value);
+	  _coords.first = boost::lexical_cast<double>(prop.value);
       }
     }
   }
@@ -63,29 +63,21 @@ namespace GPX {
 	if (last_track()->last_segment()->num_points() > 0)
 	  last_track()->new_segment();
       } else {
-	last_track()->last_segment()->new_point(_lat, _lon);
+	last_track()->last_segment()->new_point(_coords);
 
 	if (_point_count == 0) {
-	  _tot_lat = _min_lat = _max_lat = _lat;
-	  _tot_lon = _min_lon = _max_lon = _lon;
+	  _total = _min = _max = _coords;
 	} else {
-	  _tot_lat += _lat;
-	  _tot_lon += _lon;
+	  _total = _total + _coords;
 
-	  if (_lat < _min_lat)
-	    _min_lat = _lat;
-	  else if (_lat > _max_lat)
-	    _max_lat = _lat;
-	  if (_lon < _min_lon)
-	    _min_lon = _lon;
-	  else if (_lon > _max_lon)
-	  _max_lon = _lon;
+	  _min = min(_min, _coords);
+	  _max = max(_max, _coords);
 	}
 
 	_point_count++;
       }
 
-      _lat = _lon = _hdop = 0;
+      _coords.first = _coords.second = _hdop = 0;
     }
 
     _context.pop();

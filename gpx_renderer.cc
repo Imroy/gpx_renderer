@@ -146,10 +146,10 @@ int main(int argc, char* argv[]) {
   }
 
   std::cerr << "Points:\t" << parser.point_count() << std::endl;
-  std::cerr << "Lattitude:\t" << parser.min_lat() << " .. " << parser.max_lat() << ", avg: " << parser.avg_lat() << std::endl;
-  std::cerr << "Longitude:\t" << parser.min_lon() << " .. " << parser.max_lon() << ", avg: " << parser.avg_lon() << std::endl;
+  std::cerr << "Lattitude:\t" << parser.min_coords().second << " .. " << parser.max_coords().second << ", avg: " << parser.avg_coords().second << std::endl;
+  std::cerr << "Longitude:\t" << parser.min_coords().first << " .. " << parser.max_coords().first << ", avg: " << parser.avg_coords().first << std::endl;
 
-  double biggest_lat = std::min(std::abs(parser.min_lat()), std::abs(parser.max_lat()));
+  double biggest_lat = std::min(std::abs(parser.min_coords().second), std::abs(parser.max_coords().second));
   std::cerr << "Biggest lat = " << biggest_lat << std::endl;
 
   double max_radius = 6371000 * std::cos(biggest_lat * M_PI / 180.0);
@@ -158,8 +158,8 @@ int main(int argc, char* argv[]) {
   double res = 2 * M_PI * max_radius / (360.0 * RESOLUTION);
   std::cerr << "Resolution = " << res << " pixels/degree" << std::endl;
 
-  Map map(parser.min_lon(), parser.max_lat(), res);
-  Map::coords image_size = map(parser.max_lon(), parser.min_lat());
+  Map map(parser.min_coords(), res);
+  Map::coords image_size = map(parser.max_coords());
 
   unsigned int image_width = std::ceil(image_size.first);
   unsigned int image_height = std::ceil(image_size.second);
@@ -176,6 +176,8 @@ int main(int argc, char* argv[]) {
   agg::rasterizer_scanline_aa<> ras;
   ras.gamma(agg::gamma_power(2.2));
 
+  Map::coords flip_y(1, -1), bottom_left(0, image_height - 1);
+
   for (auto track_i = parser.tracks_cbegin(); track_i != parser.tracks_cend(); track_i++) {
     GPX::trk::ptr track = *track_i;
 
@@ -190,14 +192,15 @@ int main(int argc, char* argv[]) {
 
       if (segment->num_points() == 1) {
 	GPX::trkpt::ptr point = segment->first_point();
-	draw_point(ras, map(point->lon(), point->lat()), 1.0);
+	Map::coords p = bottom_left + map(point->coords()) * flip_y;
+	draw_point(ras, p, 1.0);
       } else {
 	std::list<Map::coords> outline;
 	bool first = true, second = true;
 	Map::coords last_point, last_b, last_c;
 	for (auto point_i = segment->points_cbegin(); point_i != segment->points_cend(); point_i++) {
 	  GPX::trkpt::ptr point = *point_i;
-	  Map::coords p = map(point->lon(), point->lat());
+	  Map::coords p = bottom_left + map(point->coords()) * flip_y;
 	  Map::coords a, b, c, d;
 	  if (first)
 	    first = false;

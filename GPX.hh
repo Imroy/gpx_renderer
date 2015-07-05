@@ -21,21 +21,30 @@
 #include <stack>
 #include <string>
 #include <libxml++/libxml++.h>
+#include "Map.hh"
 
 namespace GPX {
   class trkpt {
   private:
-    double _lat, _lon;
+    Map::coords _coords;
 
   public:
     trkpt(double lat, double lon) :
-      _lat(lat), _lon(lon)
+      _coords(lon, lat)
     {}
 
-    double lat(void) const { return _lat; }
-    trkpt& set_lat(double l) { _lat = l; return *this; }
-    double lon(void) const { return _lon; }
-    trkpt& set_lon(double l) { _lon = l; return *this; }
+    trkpt(const Map::coords& c) :
+      _coords(c)
+    {}
+
+    Map::coords coords(void) const { return _coords; }
+    trkpt& set_coords(const Map::coords& c) { _coords = c; return *this; }
+
+    double lat(void) const { return _coords.second; }
+    trkpt& set_lat(double l) { _coords.second = l; return *this; }
+
+    double lon(void) const { return _coords.first; }
+    trkpt& set_lon(double l) { _coords.first = l; return *this; }
 
     typedef std::shared_ptr<trkpt> ptr;
   };
@@ -47,7 +56,7 @@ namespace GPX {
   public:
     trkseg(void) {}
 
-    void new_point(double lat, double lon) { _points.push_back(std::make_shared<trkpt>(lat, lon)); }
+    void new_point(const Map::coords c) { _points.push_back(std::make_shared<trkpt>(c)); }
     trkpt::ptr first_point(void) { return _points.front(); }
     trkpt::ptr last_point(void) { return _points.back(); }
 
@@ -80,10 +89,10 @@ namespace GPX {
   private:
     std::stack<std::string> _context;
     std::list<trk::ptr> _tracks;
-    double _lat, _lon, _hdop;
+    Map::coords _coords;
+    double _hdop;
     unsigned int _point_count;
-    double _tot_lat, _min_lat, _max_lat;
-    double _tot_lon, _min_lon, _max_lon;
+    Map::coords _total, _min, _max;
 
   public:
     Parser();
@@ -99,13 +108,9 @@ namespace GPX {
 
     unsigned int point_count(void) const { return _point_count; }
 
-    double min_lat(void) const { return _min_lat; }
-    double max_lat(void) const { return _max_lat; }
-    double avg_lat(void) const { return _point_count > 0 ? _tot_lat / _point_count : 0; }
-
-    double min_lon(void) const { return _min_lon; }
-    double max_lon(void) const { return _max_lon; }
-    double avg_lon(void) const { return _point_count > 0 ? _tot_lon / _point_count : 0; }
+    Map::coords min_coords(void) const { return _min; }
+    Map::coords max_coords(void) const { return _max; }
+    Map::coords avg_coords(void) const { return _point_count > 0 ? _total / _point_count : Map::coords(0,0); }
 
   protected:
     virtual void on_start_document();
