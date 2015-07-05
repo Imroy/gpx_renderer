@@ -17,15 +17,70 @@
 	along with Photo Finish.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
+#include <algorithm>
 #include <utility>
+#include <cmath>
 
 class Map {
+public:
+  typedef std::pair<double, double> coords;
+
 private:
-  double _min_lon, _max_lat, _scale;
+  coords _top_left;
+  double _scale;
 
 public:
-  Map(double min_lon, double max_lat, double scale);
+  Map(coords tl, double scale) :
+    _top_left(tl), _scale(scale)
+  {}
 
-  typedef std::pair<double, double> coords;
-  coords operator ()(double lon, double lat);
+  Map(double lon, double lat, double scale) :
+    _top_left(lon, lat), _scale(scale)
+  {}
+
+  const coords operator ()(const coords& point) const;
 };
+
+//! Piece-wise addition
+inline const Map::coords operator +(const Map::coords& a, const Map::coords& b) {
+  return Map::coords(a.first + b.first, a.second + b.second);
+}
+
+//! Piece-wise subtraction
+inline const Map::coords operator -(const Map::coords& a, const Map::coords& b) {
+  return Map::coords(a.first - b.first, a.second - b.second);
+}
+
+//! Piece-wise multiplication
+inline const Map::coords operator *(const Map::coords& a, const Map::coords& b) {
+  return Map::coords(a.first * b.first, a.second * b.second);
+}
+
+//! Piece-wise division
+inline const Map::coords operator /(const Map::coords& a, const Map::coords& b) {
+  return Map::coords(a.first * (std::abs(b.first) > 1e-12 ? 1.0 / b.first : 1.0),
+		     a.second * (std::abs(b.second) > 1e-12 ? 1.0 / b.second : 1.0));
+}
+
+template <typename T>
+const Map::coords operator *(const Map::coords& a, T b) {
+  return std::make_pair<double, double>(a.first * b, a.second * b);
+}
+
+template <typename T>
+const Map::coords operator /(const Map::coords& a, T b) {
+  double rb;
+  if (std::abs(b) > 1e-12)
+    rb = 1.0 / b;
+  else
+    rb = 1;
+  return std::make_pair<double, double>(a.first * rb, a.second * rb);
+}
+
+inline const Map::coords min(const Map::coords& a, const Map::coords& b) {
+  return Map::coords(std::min(a.first, b.first), std::min(a.second, b.second));
+}
+
+inline const Map::coords max(const Map::coords& a, const Map::coords& b) {
+  return Map::coords(std::max(a.first, b.first), std::max(a.second, b.second));
+}
